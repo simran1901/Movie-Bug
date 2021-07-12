@@ -6,7 +6,9 @@ import '../models/app_config.dart';
 class HTTPService {
   final Dio dio = Dio();
   final GetIt getIt = GetIt.instance;
+  // ignore: non_constant_identifier_names
   late String _base_url;
+  // ignore: non_constant_identifier_names
   late String _api_key;
 
   HTTPService() {
