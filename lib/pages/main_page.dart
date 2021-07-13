@@ -3,6 +3,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../models/search_category.dart';
+
 class MainPage extends ConsumerWidget {
   late final double _deviceHeight;
   late final double _deviceWidth;
@@ -77,8 +79,12 @@ class MainPage extends ConsumerWidget {
       ),
       child: Row(
         mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [_searchFieldWidget()],
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          _searchFieldWidget(),
+          _categorySelectionWidget(),
+        ],
       ),
     );
   }
@@ -93,15 +99,47 @@ class MainPage extends ConsumerWidget {
         onSubmitted: (_input) {},
         style: TextStyle(color: Colors.white),
         decoration: InputDecoration(
-          focusedBorder: _border,
-          border: _border,
-          prefixIcon: Icon(Icons.search, color: Colors.white24),
-          hintStyle: TextStyle(color: Colors.white54),
-          filled: false,
-          fillColor: Colors.white24,
-          hintText: 'Search....'
-        ),
+            focusedBorder: _border,
+            border: _border,
+            prefixIcon: Icon(Icons.search, color: Colors.white24),
+            hintStyle: TextStyle(color: Colors.white54),
+            filled: false,
+            fillColor: Colors.white24,
+            hintText: 'Search....'),
       ),
+    );
+  }
+
+  Widget _categorySelectionWidget() {
+    return DropdownButton(
+      dropdownColor: Colors.black38,
+      value: SearchCategory.popular,
+      icon: Icon(Icons.menu, color: Colors.white24),
+      underline: Container(height: 1, color: Colors.white24),
+      onChanged: (_value) {},
+      items: [
+        DropdownMenuItem(
+          child: Text(
+            SearchCategory.popular,
+            style: TextStyle(color: Colors.white),
+          ),
+          value: SearchCategory.popular,
+        ),
+        DropdownMenuItem(
+          child: Text(
+            SearchCategory.upcoming,
+            style: TextStyle(color: Colors.white),
+          ),
+          value: SearchCategory.upcoming,
+        ),
+        DropdownMenuItem(
+          child: Text(
+            SearchCategory.none,
+            style: TextStyle(color: Colors.white),
+          ),
+          value: SearchCategory.none,
+        ),
+      ],
     );
   }
 }
