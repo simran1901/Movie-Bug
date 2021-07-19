@@ -3,25 +3,40 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../models/main_page_data.dart';
+import '../controllers/main_page_data_controller.dart';
 import '../widgets/movie_tile.dart';
 import '../models/movie.dart';
 import '../models/search_category.dart';
+
+final mainPageDataControllerProvider =
+    StateNotifierProvider<MainPageDataController>((ref) {
+  return MainPageDataController();
+});
 
 class MainPage extends ConsumerWidget {
   late final double _deviceHeight;
   late final double _deviceWidth;
   late final TextEditingController _searchTextFieldController;
 
+  // ignore: unused_field
+  late final MainPageDataController _mainPageDataController;
+  late final MainPageData _mainPageData;
+
   @override
   Widget build(BuildContext context, ScopedReader watch) {
     _deviceHeight = MediaQuery.of(context).size.height;
     _deviceWidth = MediaQuery.of(context).size.width;
     _searchTextFieldController = TextEditingController();
+
+    _mainPageDataController = watch(mainPageDataControllerProvider);
+    _mainPageData = watch(mainPageDataControllerProvider.state);
     return _buildUI();
   }
 
   Widget _buildUI() {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: Colors.black,
       body: Container(
         height: _deviceHeight,
@@ -65,7 +80,7 @@ class MainPage extends ConsumerWidget {
       width: _deviceWidth * 0.88,
       child: Column(
         mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           _topBarWidget(),
@@ -153,11 +168,11 @@ class MainPage extends ConsumerWidget {
   }
 
   Widget _moviesListViewWidget() {
-    final List<Movie> _movies = [];
+    final List<Movie> _movies = _mainPageData.movies;
 
-    for (var i = 0; i < 20; i++) {
-      // _movies.add();
-    }
+    // for (var i = 0; i < 20; i++) {
+    //   // _movies.add();
+    // }
     if (_movies.length != 0) {
       return ListView.builder(
           itemCount: _movies.length,
