@@ -1,6 +1,6 @@
 class SearchCategory {
-  static final String popular = 'popular';
-  static final String upcoming = 'upcoming';
+  static final String popular = 'Popular';
+  static final String upcoming = 'Upcoming';
   static final String none = '';
   
 }

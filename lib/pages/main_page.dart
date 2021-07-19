@@ -14,9 +14,16 @@ final mainPageDataControllerProvider =
   return MainPageDataController();
 });
 
+final selectedMoviePosterURLProvider = StateProvider<String?>((ref) {
+  final _movies = ref.watch(mainPageDataControllerProvider.state).movies;
+  return _movies.length != 0 ? _movies[0].posterURL() : null;
+});
+
 class MainPage extends ConsumerWidget {
   late final double _deviceHeight;
   late final double _deviceWidth;
+
+  late final String? _selectedMoviePosterURL;
   late final TextEditingController _searchTextFieldController;
 
   // ignore: unused_field
@@ -27,8 +34,11 @@ class MainPage extends ConsumerWidget {
   Widget build(BuildContext context, ScopedReader watch) {
     _deviceHeight = MediaQuery.of(context).size.height;
     _deviceWidth = MediaQuery.of(context).size.width;
-    _searchTextFieldController = TextEditingController();
 
+    _searchTextFieldController = TextEditingController();
+    _searchTextFieldController.text = _mainPageData.searchText;
+
+    _selectedMoviePosterURL = watch(selectedMoviePosterURLProvider).state;
     _mainPageDataController = watch(mainPageDataControllerProvider);
     _mainPageData = watch(mainPageDataControllerProvider.state);
     return _buildUI();
@@ -53,25 +63,30 @@ class MainPage extends ConsumerWidget {
   }
 
   Widget _backgroundWidget() {
-    return Container(
-      height: _deviceHeight,
-      width: _deviceWidth,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        image: DecorationImage(
-          image: NetworkImage(
-            'https://images-na.ssl-images-amazon.com/images/I/91B32iU7ayL._AC_SL1500_.jpg',
+    if (_selectedMoviePosterURL != null)
+      return Container(
+        height: _deviceHeight,
+        width: _deviceWidth,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          image: DecorationImage(
+            image: NetworkImage(_selectedMoviePosterURL!),
+            fit: BoxFit.cover,
           ),
-          fit: BoxFit.cover,
         ),
-      ),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
-        child: Container(
-          decoration: BoxDecoration(color: Colors.black.withOpacity(0.2)),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+          child: Container(
+            decoration: BoxDecoration(color: Colors.black.withOpacity(0.2)),
+          ),
         ),
-      ),
-    );
+      );
+    else
+      return Container(
+        height: _deviceHeight,
+        width: _deviceWidth,
+        color: Colors.black,
+      );
   }
 
   Widget _foregroundWidgets() {
@@ -120,7 +135,8 @@ class MainPage extends ConsumerWidget {
       height: _deviceHeight * 0.05,
       child: TextField(
         controller: _searchTextFieldController,
-        onSubmitted: (_input) {},
+        onSubmitted: (_input) =>
+            _mainPageDataController.updateTextSearch(_input),
         style: TextStyle(color: Colors.white),
         decoration: InputDecoration(
             focusedBorder: _border,
@@ -137,10 +153,12 @@ class MainPage extends ConsumerWidget {
   Widget _categorySelectionWidget() {
     return DropdownButton(
       dropdownColor: Colors.black38,
-      value: SearchCategory.popular,
+      value: _mainPageData.searchCategory,
       icon: Icon(Icons.menu, color: Colors.white24),
       underline: Container(height: 1, color: Colors.white24),
-      onChanged: (_value) {},
+      onChanged: (_value) => _value.toString().isNotEmpty
+          ? _mainPageDataController.updateSearchCategory(_value.toString())
+          : null,
       items: [
         DropdownMenuItem(
           child: Text(
@@ -170,11 +188,21 @@ class MainPage extends ConsumerWidget {
   Widget _moviesListViewWidget() {
     final List<Movie> _movies = _mainPageData.movies;
 
-    // for (var i = 0; i < 20; i++) {
-    //   // _movies.add();
-    // }
     if (_movies.length != 0) {
-      return ListView.builder(
+      return NotificationListener(
+        onNotification: (_onScrollNotification) {
+          if (_onScrollNotification is ScrollEndNotification) {
+            final before = _onScrollNotification.metrics.extentBefore;
+            final max = _onScrollNotification.metrics.maxScrollExtent;
+            if (before == max) {
+              _mainPageDataController.getMovies();
+              return true;
+            }
+            return false;
+          }
+          return false;
+        },
+        child: ListView.builder(
           itemCount: _movies.length,
           itemBuilder: (BuildContext _context, int _count) {
             return Padding(
@@ -183,7 +211,9 @@ class MainPage extends ConsumerWidget {
                 horizontal: 0,
               ),
               child: GestureDetector(
-                onTap: () {},
+                onTap: () {
+                  _selectedMoviePosterURL = _movies[_count].posterURL();
+                },
                 child: MovieTile(
                   movie: _movies[_count],
                   height: _deviceHeight * 0.20,
@@ -191,7 +221,9 @@ class MainPage extends ConsumerWidget {
                 ),
               ),
             );
-          });
+          },
+        ),
+      );
     } else {
       return Center(
         child: CircularProgressIndicator(backgroundColor: Colors.white),
